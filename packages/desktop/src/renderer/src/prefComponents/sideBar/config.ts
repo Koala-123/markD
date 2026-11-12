@@ -7,6 +7,7 @@ import {
   Reading as SpellIcon,
   Operation as KeyBindingIcon
 } from '@element-plus/icons-vue'
+import { escapeHTML } from '@muyajs/core'
 
 import preferences from '../../../../main/preferences/schema.json'
 import { t } from '../../i18n'
@@ -455,7 +456,7 @@ export const debugLanguageState = (): void => {
             }
           }
         } catch (e) {
-          debugInfo += `<p style="color:red;">❌ Error checking global: ${errMessage(e)}</p>`
+          debugInfo += `<p style="color:red;">❌ Error checking global: ${escapeHTML(errMessage(e))}</p>`
         }
 
         // Try to get the i18n instance
@@ -472,7 +473,7 @@ export const debugLanguageState = (): void => {
             currentLanguage = inst.locale
           }
 
-          debugInfo += `<p><strong>🌍 Current language:</strong> ${currentLanguage}</p>`
+          debugInfo += `<p><strong>🌍 Current language:</strong> ${escapeHTML(currentLanguage)}</p>`
 
           // Test translation
           try {
@@ -480,9 +481,9 @@ export const debugLanguageState = (): void => {
             const testTranslation = tFn
               ? tFn('preferences.general.window.titleBarStyle.custom')
               : ''
-            debugInfo += `<p><strong>🔄 Test translation:</strong> ${testTranslation}</p>`
+            debugInfo += `<p><strong>🔄 Test translation:</strong> ${escapeHTML(testTranslation)}</p>`
           } catch (e) {
-            debugInfo += `<p style="color:red;"><strong>🔄 Test translation failed:</strong> ${errMessage(e)}</p>`
+            debugInfo += `<p style="color:red;"><strong>🔄 Test translation failed:</strong> ${escapeHTML(errMessage(e))}</p>`
           }
         } else {
           debugInfo += '<p style="color:red;">❌ Could not get a valid i18n instance</p>'
@@ -491,7 +492,7 @@ export const debugLanguageState = (): void => {
 
       details.innerHTML = debugInfo
     } catch (e) {
-      details.innerHTML = `<p style="color:red;">❌ Debug failed: ${errMessage(e)}</p>`
+      details.innerHTML = `<p style="color:red;">❌ Debug failed: ${escapeHTML(errMessage(e))}</p>`
     }
   }, 500)
 }

@@ -86,7 +86,6 @@ export const setLanguage = async(locale: string): Promise<void> => {
 
     if (!globalI18n.availableLocales.includes(locale)) {
       globalI18n.setLocaleMessage(locale, translation)
-      console.log(`🌐 Loaded and set new locale: ${locale}`)
     }
   }
   globalI18n.locale.value = locale
