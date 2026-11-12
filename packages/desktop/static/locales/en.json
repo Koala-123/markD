@@ -310,6 +310,7 @@
       "title": "Table of Contents"
     },
     "export": "Export...",
+    "preview": "Preview",
     "options": {
       "pageSizes": {
         "a3": "A3 (297mm x 420mm)",
@@ -949,6 +950,30 @@
     "print": {
       "error": "Print error for \"{title}\"",
       "failed": "Print failed"
+    },
+    "printPreview": {
+      "title": "Print Preview",
+      "print": "Print",
+      "failed": "Could not build print preview"
+    },
+    "toolbar": {
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "inlineCode": "Inline code",
+      "link": "Link",
+      "image": "Image",
+      "quote": "Quote",
+      "bulletList": "Bullet list",
+      "orderedList": "Ordered list",
+      "taskList": "Task list",
+      "codeBlock": "Code block",
+      "table": "Table",
+      "horizontalRule": "Horizontal rule",
+      "print": "Print"
     },
     "sourceCode": {
       "cursorNullComment": "Cursor null comment",

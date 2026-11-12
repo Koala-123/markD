@@ -31,6 +31,7 @@
       <command-palette />
       <about-dialog />
       <export-setting-dialog />
+      <print-preview />
       <rename />
       <import-modal />
     </div>
@@ -49,6 +50,7 @@ import SideBar from '@/components/sideBar/index.vue'
 import AboutDialog from '@/components/about/index.vue'
 import CommandPalette from '@/components/commandPalette/index.vue'
 import ExportSettingDialog from '@/components/exportSettings/index.vue'
+import PrintPreview from '@/components/printPreview/index.vue'
 import Rename from '@/components/rename/index.vue'
 import ImportModal from '@/components/import/index.vue'
 import bus from '@/bus'

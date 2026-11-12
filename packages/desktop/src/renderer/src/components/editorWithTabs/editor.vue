@@ -1370,7 +1370,42 @@ const handleExport = async (options: unknown) => {
 }
 
 const handlePrintServiceClearup = () => {
-  printer!.clearup()
+  printer?.clearup()
+}
+
+// Builds the same styled HTML the 'pdf'/'print' cases in handleExport render
+// into the (hidden) print container, but only to display it in a visible
+// preview — no printer/IPC round-trip. Kept separate from handleExport's
+// switch (rather than sharing a branch) so the preview path can't affect the
+// already-tested print/PDF flow.
+const handleExportPreview = async (options: unknown) => {
+  const opts = options as ExportOptions
+  const { headerFooterStyled } = opts
+  try {
+    const extraCss = await getCssForOptions(opts as unknown as PdfCssOptions)
+    const htmlToc = getHtmlToc(editor.value.getTOC(), opts as unknown as HtmlTocOptions)
+    const markdown = editor.value.getMarkdown()
+    const header = (opts.header ?? null) as HeaderFooterPart | null
+    const footer = (opts.footer ?? null) as HeaderFooterPart | null
+    const html = await exportStyledHTML(editor.value, markdown, {
+      title: '',
+      printOptimization: true,
+      extraCss,
+      toc: htmlToc,
+      header,
+      footer,
+      headerFooterStyled: headerFooterStyled as boolean | undefined,
+      dir: props.textDirection
+    })
+    bus.emit('preview-html', { html, options: opts })
+  } catch (err) {
+    log.error('Failed to build print preview:', err)
+    notice.notify({
+      title: t('editor.printPreview.failed'),
+      type: 'error',
+      message: (err as { message?: string } | null | undefined)?.message ?? t('editor.export.error')
+    })
+  }
 }
 
 // Push the current selection to the application-menu / toolbar state. Called on
@@ -1827,6 +1862,7 @@ onMounted(() => {
   bus.on('redo', handleRedo)
   bus.on('selectAll', handleSelectAll)
   bus.on('export', handleExport)
+  bus.on('export-preview', handleExportPreview)
   bus.on('print-service-clearup', handlePrintServiceClearup)
   bus.on('paragraph', handleEditParagraph)
   bus.on('format', handleInlineFormat)
@@ -1980,6 +2016,7 @@ onBeforeUnmount(() => {
   bus.off('redo', handleRedo)
   bus.off('selectAll', handleSelectAll)
   bus.off('export', handleExport)
+  bus.off('export-preview', handleExportPreview)
   bus.off('print-service-clearup', handlePrintServiceClearup)
   bus.off('paragraph', handleEditParagraph)
   bus.off('format', handleInlineFormat)

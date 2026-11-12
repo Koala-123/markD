@@ -277,6 +277,13 @@
       </el-tabs>
       <div class="button-controlls">
         <button
+          v-if="isPrintable"
+          class="button-primary"
+          @click="handlePreviewClicked"
+        >
+          {{ t('exportSettings.preview') }}
+        </button>
+        <button
           class="button-primary"
           @click="handleClicked"
         >
@@ -422,7 +429,7 @@ const showDialog = (type: unknown) => {
   }
 }
 
-const handleClicked = () => {
+const buildOptions = (): Record<string, unknown> => {
   const options: Record<string, unknown> = {
     type: exportType.value,
     pageSize: pageSize.value,
@@ -481,8 +488,19 @@ const handleClicked = () => {
     })
   }
 
+  return options
+}
+
+const handleClicked = () => {
+  const options = buildOptions()
   showExportSettingsDialog.value = false
   bus.emit('export', options)
+}
+
+const handlePreviewClicked = () => {
+  const options = buildOptions()
+  showExportSettingsDialog.value = false
+  bus.emit('export-preview', options)
 }
 
 const onSelectChange = (key: string, value: unknown) => {
@@ -580,6 +598,9 @@ const loadThemesFromDisk = async () => {
 
 .button-controlls .button-primary {
   font-size: 14px;
+}
+.button-controlls .button-primary + .button-primary {
+  margin-left: 8px;
 }
 
 .el-tab-pane section:first-child {

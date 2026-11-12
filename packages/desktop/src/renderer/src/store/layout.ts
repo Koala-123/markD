@@ -42,7 +42,17 @@ const createBufferedLayoutState = (state: unknown): BufferedLayout | null => {
   }
 }
 
-const initialWidth = localStorage.getItem('side-bar-width')
+// `localStorage` can be absent outside a real browser context (e.g. some
+// test/embedding environments), and this runs at module load time — guard
+// it so importing this store never crashes.
+const safeGetItem = (key: string): string | null =>
+  typeof localStorage === 'undefined' ? null : localStorage.getItem(key)
+
+const safeSetItem = (key: string, value: string): void => {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(key, value)
+}
+
+const initialWidth = safeGetItem('side-bar-width')
 const initialSideBarWidth = normalizeSideBarWidth(initialWidth)
 
 export const useLayoutStore = defineStore('layout', () => {
@@ -134,7 +144,7 @@ export const useLayoutStore = defineStore('layout', () => {
     { scheduleBufferUpdate = true }: SetLayoutOptions = {}
   ): void {
     const normalizedWidth = normalizeSideBarWidth(width)
-    localStorage.setItem('side-bar-width', String(normalizedWidth))
+    safeSetItem('side-bar-width', String(normalizedWidth))
     sideBarWidth.value = normalizedWidth
     if (scheduleBufferUpdate) {
       debouncedSendBufferedState()

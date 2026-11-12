@@ -5,14 +5,19 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 // injected by the preload bridge. Stub the surface before the hoisted imports
 // run so the module graph can load. Per-test overrides below swap the
 // `window.fileUtils` behavior via `vi.resetModules()` + dynamic import.
+interface TestWindowGlobals {
+  path?: { sep: string, join: (...parts: string[]) => string }
+  marktext?: { paths: { userDataPath: string } }
+  fileUtils?: { isFile: (p: string) => Promise<boolean>, readFile: (p: string) => Promise<unknown> }
+}
+
+const getTestWindow = (): TestWindowGlobals =>
+  typeof window !== 'undefined'
+    ? (window as unknown as TestWindowGlobals)
+    : (globalThis as unknown as { window: TestWindowGlobals }).window
+
 vi.hoisted(() => {
-  const w = globalThis as unknown as {
-    window?: {
-      path?: { sep: string, join: (...parts: string[]) => string }
-      marktext?: { paths: { userDataPath: string } }
-      fileUtils?: { isFile: (p: string) => Promise<boolean>, readFile: (p: string) => Promise<unknown> }
-    }
-  }
+  const w = globalThis as unknown as { window?: TestWindowGlobals }
   w.window ??= {}
   w.window.path ??= { sep: '/', join: (...parts: string[]) => parts.join('/') }
   w.window.marktext ??= { paths: { userDataPath: '/userData' } }
@@ -34,7 +39,7 @@ const loadPdf = async() => {
 describe('getCssForOptions', () => {
   beforeEach(() => {
     vi.resetModules()
-    const target = typeof window !== 'undefined' ? window : (globalThis as any).window
+    const target = getTestWindow()
     target.marktext = { paths: { userDataPath: '/userData' } }
     target.fileUtils = { isFile: async() => false, readFile: async() => '' }
     target.path = { sep: '/', join: (...parts: string[]) => parts.join('/') }
@@ -44,9 +49,9 @@ describe('getCssForOptions', () => {
     const { getCssForOptions } = await loadPdf()
     // Remove the disk surfaces entirely: if academic/liber tried a disk read
     // these would throw. They must not.
-    const target = typeof window !== 'undefined' ? window : (globalThis as any).window
-    delete (target as any).marktext
-    delete (target as any).fileUtils
+    const target = getTestWindow()
+    delete target.marktext
+    delete target.fileUtils
 
     await expect(getCssForOptions({ theme: 'academic' })).resolves.toBeTypeOf('string')
     await expect(getCssForOptions({ theme: 'liber' })).resolves.toBeTypeOf('string')
