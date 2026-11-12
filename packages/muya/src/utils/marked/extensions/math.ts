@@ -14,9 +14,13 @@ interface IOptions {
     useKatexRender?: boolean;
 }
 
-const inlineStartRule = /(?:^|[^\\])(\${1,2})(?!\$)/;
+const inlineStartRule = /(?:^|[^\\])\${1,2}(?!\$)/;
+// Hand-tuned to disambiguate math from currency (e.g. reject `$5$3`); rewriting
+// to satisfy the linter risks reintroducing that bug (see commit 9aa81609).
 const inlineRule
+    // eslint-disable-next-line regexp/no-useless-assertions, regexp/no-useless-lazy
     = /^(\${1,2})(?!\$)((?:\\.|[^\\$\n])+?)\1(?![0-9$])/;
+// eslint-disable-next-line regexp/no-super-linear-backtracking
 const blockRule = /^(\${2})(?:\n((?:\\[\s\S]|[^\\])+?)\n|\s*([^\n]+?)\s*)\1[ \t]*(?:\n|$)/;
 
 const DEFAULT_OPTIONS = {
@@ -60,9 +64,8 @@ function inlineKatex(renderer: (token: IMathToken) => string) {
         name: 'inlineMath',
         level: 'inline' as const,
         start(src: string) {
-            let match: RegExpExecArray | null;
             const re = new RegExp(inlineStartRule.source, 'g');
-            while ((match = re.exec(src)) !== null) {
+            for (let match = re.exec(src); match; match = re.exec(src)) {
                 const index = match.index + (match[0].startsWith('$') ? 0 : 1);
                 const possibleKatex = src.substring(index);
 
@@ -92,9 +95,8 @@ function blockKatex(renderer: (token: IMathToken) => string) {
         name: 'multiplemath',
         level: 'block' as const,
         start(src: string) {
-            let match: RegExpExecArray | null;
             const re = /(?:^|\n)\${2}/g;
-            while ((match = re.exec(src)) !== null) {
+            for (let match = re.exec(src); match; match = re.exec(src)) {
                 const index = match.index + (match[0].startsWith('\n') ? 1 : 0);
                 const possibleBlock = src.substring(index);
 

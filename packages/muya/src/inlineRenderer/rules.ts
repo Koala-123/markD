@@ -67,8 +67,13 @@ export type GfmRules = typeof gfmRules;
 
 // Markdown extensions (not belongs to GFM and Commonmark)
 export const inlineExtensionRules = {
+    // The closing-delimiter lookahead must match `utils/marked/extensions/math.ts`'s
+    // `inlineRule` (the export/reload tokenizer) — blocking a digit as well as `$`
+    // disambiguates currency-adjacent text like `$5$3` from math. Letting the two
+    // diverge means the same input renders as math while editing but reverts to
+    // plain text on export/reload, or vice versa.
     // eslint-disable-next-line regexp/no-super-linear-backtracking
-    inline_math: /^(\${1,2})((?:[^$\\]|\\.)+)(\\*)\1(?!\$)/,
+    inline_math: /^(\${1,2})((?:[^$\\]|\\.)+)(\\*)\1(?![0-9$])/,
     // This is not the best regexp, because it not support `2^2\\^`.
     superscript: /^(\^)((?:[^^\s]|(?<=\\)\1|(?<=\\) )+?)(?<!\\)\1(?!\1)/,
     subscript: /^(~)((?:[^~\s]|(?<=\\)\1|(?<=\\) )+?)(?<!\\)\1(?!\1)/,
@@ -76,6 +81,16 @@ export const inlineExtensionRules = {
 };
 
 export type InlineExtensionRules = typeof inlineExtensionRules;
+
+// Same shape as `inline_math` above minus the currency lookahead. Deliberately
+// NOT part of `inlineExtensionRules`/`inlineRules` (so it never joins
+// `validateRules`) — it exists only so `tryChunks` (lexer.ts) can measure how
+// far to skip when `inline_math` rejects a span, so the scanner treats it as
+// one literal run instead of retrying character-by-character, which mis-pairs
+// its closing `$` with a later, unrelated opening delimiter (e.g. reading
+// "3 ... " as math in "$5$3 ... $x^2$").
+// eslint-disable-next-line regexp/no-super-linear-backtracking
+export const inlineMathNaive = /^(\${1,2})((?:[^$\\]|\\.)+)(\\*)\1/;
 
 export const inlineRules = {
     ...endRules,

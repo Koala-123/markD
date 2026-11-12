@@ -7,7 +7,7 @@ import type {
 } from './types';
 import escapeCharactersMap from '../config/escapeCharacter';
 import { isLengthEven, union } from '../utils';
-import { beginRules, inlineRules, linkValidateRules, validateRules } from './rules';
+import { beginRules, inlineMathNaive, inlineRules, linkValidateRules, validateRules } from './rules';
 import {
     correctUrl,
     getAttributes,
@@ -254,6 +254,21 @@ function tryChunks(state: ILexState): boolean {
 
             return true;
         }
+    }
+
+    // `inline_math` above rejected a $...$ span for currency disambiguation.
+    // Consume the whole rejected span as literal text in one step — otherwise
+    // the one-char-at-a-time fallback in tokenizerFac reaches its closing `$`
+    // and mis-pairs that with a later, unrelated math span.
+    const naive = inlineMathNaive.exec(state.src);
+    if (naive && isLengthEven(naive[3])) {
+        if (!state.pending)
+            state.pendingStartPos = state.pos;
+        state.pending += naive[0];
+        state.src = state.src.substring(naive[0].length);
+        state.pos = state.pos + naive[0].length;
+
+        return true;
     }
 
     return false;
