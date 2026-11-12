@@ -72,9 +72,6 @@ importers:
       '@marktext/file-icons':
         specifier: ^1.0.6
         version: 1.0.6
-      '@marktext/muyajs':
-        specifier: workspace:*
-        version: link:../muyajs
       '@muyajs/core':
         specifier: workspace:*
         version: link:../muya
@@ -505,72 +502,6 @@ importers:
       intl-segmenter-polyfill:
         specifier: ^0.4.4
         version: 0.4.4
-
-  packages/muyajs:
-    dependencies:
-      '@marktext/file-icons':
-        specifier: ^1.0.6
-        version: 1.0.6
-      dompurify:
-        specifier: ^3.4.11
-        version: 3.4.11
-      element-resize-detector:
-        specifier: ^1.2.4
-        version: 1.2.4
-      execall:
-        specifier: ^3.0.0
-        version: 3.0.0
-      flowchart.js:
-        specifier: ^1.18.0
-        version: 1.18.0
-      fuzzaldrin:
-        specifier: ^2.1.0
-        version: 2.1.0
-      github-markdown-css:
-        specifier: ^5.9.0
-        version: 5.9.0
-      html-tags:
-        specifier: ^5.1.0
-        version: 5.1.0
-      joplin-turndown-plugin-gfm:
-        specifier: ^1.0.12
-        version: 1.0.12
-      katex:
-        specifier: ^0.17.0
-        version: 0.17.0
-      mermaid:
-        specifier: ^11.15.0
-        version: 11.15.0
-      pako:
-        specifier: ^2.1.0
-        version: 2.1.0
-      pathe:
-        specifier: ^2.0.3
-        version: 2.0.3
-      prismjs:
-        specifier: ^1.30.0
-        version: 1.30.0
-      snabbdom:
-        specifier: ^3.6.4
-        version: 3.6.4
-      snabbdom-to-html:
-        specifier: ^7.1.0
-        version: 7.1.0
-      snapsvg-cjs:
-        specifier: ^0.0.6
-        version: 0.0.6(eve@0.5.4)
-      turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
-      underscore:
-        specifier: ^1.13.8
-        version: 1.13.8
-      vega-embed:
-        specifier: ^7.1.0
-        version: 7.1.0(vega-lite@6.4.3(vega@6.2.0))(vega@6.2.0)
-      webfontloader:
-        specifier: ^1.6.28
-        version: 1.6.28
 
   packages/website:
     dependencies:
