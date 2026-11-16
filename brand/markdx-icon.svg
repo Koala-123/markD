@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="markDX">
+  <!-- Letters are stroked paths, not text, so the icon renders the same with no fonts installed. -->
+  <rect width="1024" height="1024" rx="228" fill="#14141F"/>
+  <g fill="none" stroke-width="72" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#F6F1E7" d="M180 615V355M180 460c0-75 42-105 84-105 44 0 76 30 76 105v155M340 460c0-75 42-105 84-105 44 0 76 30 76 105v155"/>
+    <path stroke="#FF5A36" d="M622 355l224 260M846 355L622 615"/>
+  </g>
+  <path stroke="#F6F1E7" stroke-opacity=".22" stroke-width="14" stroke-linecap="round" d="M144 704h738"/>
+</svg>
