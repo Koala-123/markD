@@ -24,20 +24,50 @@ const MARKER = '.migrated-from-marktext'
 /**
  * Copies settings from a MarkText user-data folder the first time this app
  * starts with `newDir`. Copies, never moves, so a MarkText install next to
- * this one keeps working, and never overwrites a file that already exists.
+ * this one keeps working, and skips anything `newDir` already has.
  *
  * @returns The entries that were copied.
  */
 export const migrateUserData = (oldDir: string, newDir: string): string[] => {
   const marker = path.join(newDir, MARKER)
-  if (fs.existsSync(marker)) return []
+  if (fs.existsSync(marker) || path.resolve(oldDir) === path.resolve(newDir)) return []
 
-  const found = SETTINGS.filter((name) => fs.existsSync(path.join(oldDir, name)))
   fs.mkdirSync(newDir, { recursive: true })
-  for (const name of found) {
-    fs.cpSync(path.join(oldDir, name), path.join(newDir, name), { recursive: true, force: false })
-  }
-  // Written last: a copy that threw part-way is retried on the next start.
+  // Written before copying: there is exactly one attempt. If a copy throws,
+  // the app starts on defaults instead of retrying on every launch into a
+  // profile it has since filled with its own files.
   fs.writeFileSync(marker, '')
-  return found
+
+  const wanted = SETTINGS.filter(
+    (name) => fs.existsSync(path.join(oldDir, name)) && !fs.existsSync(path.join(newDir, name))
+  )
+  for (const name of wanted) {
+    // `dereference`: a symlinked settings file (dotfile managers) is copied as
+    // a real file. Recreating the link would leave both apps writing one file.
+    fs.cpSync(path.join(oldDir, name), path.join(newDir, name), {
+      recursive: true,
+      dereference: true
+    })
+  }
+  return wanted
+}
+
+/**
+ * Rewrites a JSON settings file without the top-level keys `accepts` turns
+ * down. A newer MarkText can write values this build's schema rejects, and
+ * one rejected value is enough to stop the app from starting.
+ *
+ * @returns The keys that were removed.
+ */
+export const dropRejectedKeys = (
+  file: string,
+  accepts: (key: string, value: unknown) => boolean
+): string[] => {
+  const settings = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>
+  const rejected = Object.keys(settings).filter((key) => !accepts(key, settings[key]))
+  if (rejected.length) {
+    for (const key of rejected) delete settings[key]
+    fs.writeFileSync(file, JSON.stringify(settings, null, 2))
+  }
+  return rejected
 }

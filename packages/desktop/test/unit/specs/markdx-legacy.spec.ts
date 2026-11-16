@@ -1,8 +1,18 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync
+} from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { aliasMarkdxEnv, migrateUserData } from 'main_renderer/markdx/legacy'
+import { aliasMarkdxEnv, dropRejectedKeys, migrateUserData } from 'main_renderer/markdx/legacy'
 
 const dirs: string[] = []
 function tempDir(): string {
@@ -82,13 +92,52 @@ describe('migrateUserData', () => {
     expect(readFileSync(path.join(oldDir, 'preferences.json'), 'utf8')).toBe('{"theme":"dark"}')
   })
 
-  it('never overwrites a settings file that already exists', () => {
+  it('never overwrites a settings file that already exists, and does not report it as copied', () => {
     const oldDir = oldProfile()
     const newDir = tempDir()
     writeFileSync(path.join(newDir, 'preferences.json'), '{"theme":"light"}')
 
-    migrateUserData(oldDir, newDir)
+    expect(migrateUserData(oldDir, newDir)).not.toContain('preferences.json')
     expect(readFileSync(path.join(newDir, 'preferences.json'), 'utf8')).toBe('{"theme":"light"}')
+  })
+
+  // Windows needs a privilege to create symlinks, so the setup itself fails there.
+  it.skipIf(process.platform === 'win32')(
+    'copies a symlinked settings file as a real file, not as a link back to the original',
+    () => {
+      const oldDir = tempDir()
+      const dotfiles = tempDir()
+      writeFileSync(path.join(dotfiles, 'prefs.json'), '{"theme":"dark"}')
+      symlinkSync(path.join(dotfiles, 'prefs.json'), path.join(oldDir, 'preferences.json'))
+      const newDir = path.join(tempDir(), 'markDX')
+
+      migrateUserData(oldDir, newDir)
+
+      const copy = path.join(newDir, 'preferences.json')
+      expect(lstatSync(copy).isSymbolicLink()).toBe(false)
+      writeFileSync(copy, '{"theme":"light"}')
+      expect(readFileSync(path.join(dotfiles, 'prefs.json'), 'utf8')).toBe('{"theme":"dark"}')
+    }
+  )
+
+  // chmod does not restrict reads on Windows, nor for root.
+  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+    'makes one attempt only: a copy that throws is not retried on the next start',
+    () => {
+      const oldDir = oldProfile()
+      chmodSync(path.join(oldDir, 'preferences.json'), 0)
+      const newDir = path.join(tempDir(), 'markDX')
+
+      expect(() => migrateUserData(oldDir, newDir)).toThrow()
+      chmodSync(path.join(oldDir, 'preferences.json'), 0o644)
+      expect(migrateUserData(oldDir, newDir)).toEqual([])
+    }
+  )
+
+  it('does nothing when the old and new folders are the same', () => {
+    const dir = oldProfile()
+    expect(migrateUserData(dir, dir)).toEqual([])
+    expect(existsSync(path.join(dir, '.migrated-from-marktext'))).toBe(false)
   })
 
   it('runs once: later changes to the old folder are not picked up', () => {
@@ -106,5 +155,33 @@ describe('migrateUserData', () => {
     expect(migrateUserData(path.join(tempDir(), 'missing'), newDir)).toEqual([])
     // Marked as done, so a MarkText installed later is not imported by surprise.
     expect(migrateUserData(oldProfile(), newDir)).toEqual([])
+  })
+})
+
+describe('dropRejectedKeys', () => {
+  it('removes only the keys that are turned down and reports them', () => {
+    const file = path.join(tempDir(), 'preferences.json')
+    writeFileSync(file, '{"theme":"dark","startUpAction":"restoreLastWindow","fontSize":19}')
+
+    const rejected = dropRejectedKeys(file, (key) => key !== 'startUpAction')
+
+    expect(rejected).toEqual(['startUpAction'])
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ theme: 'dark', fontSize: 19 })
+  })
+
+  it('passes each value to the judge', () => {
+    const file = path.join(tempDir(), 'preferences.json')
+    writeFileSync(file, '{"editorFontFamily":"","codeFontFamily":"Fira Code"}')
+
+    expect(dropRejectedKeys(file, (_key, value) => value !== '')).toEqual(['editorFontFamily'])
+  })
+
+  it('leaves the file byte-for-byte alone when every key is accepted', () => {
+    const file = path.join(tempDir(), 'preferences.json')
+    const original = '{"theme":"dark",\n\n  "fontSize":19}'
+    writeFileSync(file, original)
+
+    expect(dropRejectedKeys(file, () => true)).toEqual([])
+    expect(readFileSync(file, 'utf8')).toBe(original)
   })
 })
