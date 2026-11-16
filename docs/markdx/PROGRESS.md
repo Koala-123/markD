@@ -8,28 +8,62 @@ protected) and `BASELINE.md` (what "green" means here).
 | Phase | Status | Branch |
 |---|---|---|
 | Step 0: audit | **done** | `markdx/step-0-audit` |
-| Phase 0: rebrand | next | `brand/markdx` |
-| Phase 1: modes shell | not started | `markdx/phase-1-modes` |
+| Phase 0: rebrand | **done**, PR open | `brand/markdx` |
+| Phase 1: modes shell | next | `markdx/phase-1-modes` |
 | Phase 2: Marp decks | not started | `markdx/phase-2-marp` |
 | Phase 3: notebooks | not started, **blocked on Q1** | `markdx/phase-3-notebooks` |
 | Phase 4: Zotero | not started, **blocked on Q1** | `markdx/phase-4-zotero` |
 | Phase 5: brand, UI, marketing | not started | `markdx/phase-5-brand` |
 
+## Standing requirements added by the owner
+
+**R1. Screen-reader accessible (2026-11-16).** Beyond the keyboard and contrast
+pass the brief already asked for:
+
+- Every new markDX control ships with a semantic role, an accessible name, full
+  keyboard operation, a visible focus indicator, and a live-region announcement
+  when it changes something the user cannot see (mode switched, cell finished,
+  slide changed, citation inserted).
+- New e2e tests assert on roles and names, not only on CSS classes.
+- Phase 5 audits the chrome that already exists (title bar, tabs, sidebar, format
+  toolbar, dialogs) with VoiceOver and an automated checker, and fixes what it
+  finds. The format toolbar is protected (`FORK_DELTA.md`, D): its buttons are
+  glyphs with only a `title`, so the fix there is additive `aria-label`s.
+- Not promised: the Muya editing surface itself is one large `contenteditable`.
+  Its screen-reader behaviour will be measured in Phase 5 and reported honestly
+  rather than assumed to be fixable in one pass.
+
 ## Done
 
-- Step 0: remotes, branches and history audited; the five fork commits read in full;
-  `FORK_DELTA.md` and `BASELINE.md` written.
+- **Step 0.** Remotes, branches and history audited; the five fork commits read in
+  full; `FORK_DELTA.md` and `BASELINE.md` written.
+- **Phase 0.** The app launches as markDX.
+  - `brand/markdx-icon.svg` and `scripts/markdx-icons.ts`: all app icons regenerated
+    (PNG 16 to 1024, `.ico`, `.icns`).
+  - `scripts/markdx-rebrand.ts`: dry run by default, `--apply` to write, second run
+    is a no-op. 186 replacements in 25 files; comments and identifiers left alone.
+  - `MARKDX_*` variables mirror onto `MARKTEXT_*`; the new name wins.
+  - One-time copy of settings from the MarkText user-data folder. Preferences this
+    build's schema rejects are dropped, so a profile from a newer MarkText cannot
+    stop the app from starting.
+  - An independent review found no blockers and three issues worth fixing, all
+    fixed: the startup failure above, `.deb`/`.rpm` packages still named
+    `marktext`, and symlinked settings being copied as links.
+  - Protected files touched: `static/locales/en.json` (13 values, word swap only;
+    the fork's own keys untouched) and `packages/desktop/package.json` (description,
+    plus one added `productName` line).
 
 ## Next
 
-Phase 0, on `brand/markdx` cut from `markdx/step-0-audit`:
+Phase 1, on `markdx/phase-1-modes` cut from `brand/markdx`:
 
-1. Draw the icon and wordmark SVGs in `brand/` (Phase 0 needs them for the app icons).
-2. Write the rename as a script with a dry-run mode, so it can be replayed on a
-   different base if Q1 is answered "sync first".
-3. Dry run, review the list, apply, run again and confirm no change.
-4. `MARKDX_*` environment variables, user-data migration, installer and `.desktop` files.
-5. Build, launch, screenshot, run checks against `BASELINE.md`, fresh reviewer, PR.
+1. `detectMode()` as a pure function with unit tests: `marp: true` → Deck;
+   `.ipynb` or `markdx: notebook` → Notebook; otherwise Doc.
+2. A small Pinia store for the per-tab manual override (new file; no edit to the
+   2,100-line editor store).
+3. Segmented control in the title bar, built as a `radiogroup` with arrow-key
+   navigation and a live announcement (R1), plus three command-palette commands.
+4. e2e: cursor and undo history survive a switch; the text is byte-identical.
 
 ## Decisions
 
@@ -40,8 +74,18 @@ Phase 0, on `brand/markdx` cut from `markdx/step-0-audit`:
 | D3 | Fork delta is measured against `origin/develop` at `e52106fd`. | `master` is frozen at v0.19.0. |
 | D4 | markDX branches are cut from `fix/math-recognition-and-export-compat`, stacked one on the next. Each PR's base is the previous branch in the stack. | `fork/develop` contains none of the fork's five commits, so cutting from it would drop protected work. Stacking keeps each PR to one phase. |
 | D5 | pnpm 10.33.4 is run from a temporary folder; installs use `--frozen-lockfile`. | pnpm is not on `PATH`; the lockfile was hand-edited and must not be re-resolved. |
-| D6 | Unit tests are compared with `NODE_OPTIONS=--no-experimental-webstorage` (737 pass). | Node 26 breaks one protected spec for reasons unrelated to the code. See `BASELINE.md`. |
+| D6 | Unit tests are compared with `NODE_OPTIONS=--no-experimental-webstorage`. | Node 26 breaks one protected spec for reasons unrelated to the code. See `BASELINE.md`. |
 | D7 | Work proceeds on the current base (upstream as of `e52106fd`). No upstream merge. | A merge would rewrite protected files. That is the owner's call: see Q1. |
+| D8 | The app name is set with `"productName": "markDX"` in `packages/desktop/package.json`. | Electron prefers it over `name`, in dev and packaged builds alike, so the package can stay `marktext` (an identifier) while the user-data folder becomes `markDX`. |
+| D9 | The product name is decided in one place: `scripts/markdx-rebrand.ts`. | A later rename is two constants and a re-run. It also lets the rename be replayed on a new base if Q1 is answered "sync first". |
+| D10 | The settings migration copies `preferences.json`, `keybindings.json`, `recently-used-documents.json` and `themes/` only. | `dataCenter.json` stores absolute paths into the old folder; copying it would make markDX save pasted images into MarkText's folder. Caches are not safe to copy. |
+| D11 | The rename also covers the `description` values in `src/main/preferences/schema.json`, although the brief lists only `.ts`, `.vue` and `index.html`. | They are the fallback text shown by the preferences search box, so they are user-visible. |
+| D12 | Repository, help, sponsor and documentation URLs were left pointing at MarkText. | The brief says not to rename repository URLs. The consequences are in Q4. |
+| D13 | The migration code under `src/main/markdx/` is excluded from the rename script. | It names the old app on purpose. |
+| D14 | The migration runs after the command line is parsed, and only when no `--user-data-dir` is in effect. | Dev mode and portable mode pick their profile inside `cli()`, not on the command line. One source of truth. |
+| D15 | Migrated preferences are checked key by key against a scratch electron-store that uses the real schema; rejected keys are dropped. | Upstream's newer schema allows values this build rejects, and one rejected value makes electron-store throw at startup. Using the real loader as the judge needs no new dependency. |
+| D16 | The migration makes exactly one attempt (the marker is written before copying) and copies symlinks as real files. | A retry would run against a profile the app has since filled with defaults. A recreated symlink would leave both apps writing one file. |
+| D17 | `deb.packageName` and `rpm.packageName` are set to `markdx` in `electron-builder.yml`. | fpm names packages after `package.json` `name`, which stays `marktext`; a markDX package would otherwise replace an installed MarkText. |
 
 ## Open questions for the owner
 
@@ -67,11 +111,47 @@ Options: run tests on Node 22 or 24 as CI does, or add
 without a decision; recommended: the script flag, a one-line edit to
 `packages/desktop/package.json`.
 
-**Q3. Real `appId`.** Phase 0 uses the placeholder `com.markdx.app`. The owner needs
-to choose the real one before any signed or published build.
+**Q3. Real `appId`.** Phase 0 uses the placeholder `com.markdx.app` (in
+`electron-builder.yml`, the Windows AppUserModelID and the Linux appdata id). The
+owner needs to choose the real one before any signed or published build.
+
+**Q4. Links and updates still point at MarkText.** Left alone because the brief
+says not to rename repository URLs, but three of them now mislead:
+
+- "Support markDX" in the Help menu opens MarkText's sponsor page.
+- "Report issue", "Discussions" and the documentation links send markDX users to
+  MarkText's maintainers.
+- The crash dialog's Report button opens a new issue on MarkText's tracker.
+- "Check for Updates" uses `electron-updater`. If a build is ever published with
+  the upstream `repository` field, markDX could offer MarkText releases as its own
+  updates. Its download cache folder is also still named `marktext-updater`.
+- The Linux appdata file keeps MarkText's homepage, bug tracker, screenshots and
+  release history.
+
+Recommended: point Help and issue links at the fork, and hide "Check for Updates"
+until markDX has its own release feed. Needs the owner's URLs.
+
+**Q5. A protected e2e spec is out of date.** `test/e2e/export-pdf.spec.ts` fails 4
+tests at baseline. Its selector `.print-settings-dialog .button-primary` now
+matches two buttons, Preview and Export, since the fork added Preview. The test is
+plainly stale rather than the feature broken. Not edited. Recommended one-line fix:
+select the Export button by its text or as the last `.button-primary`.
 
 ## Things to remember
 
 - The fork is public. Anything pushed is visible.
 - `CLAUDE.md` is stale in places (website stack, marked version). Trust the code.
 - Never run `pnpm format`, `eslint --fix` or any formatter across the repo.
+- Launching the app creates `~/Library/Application Support/markDX`. Electron does
+  that itself before any app code runs, even with `--user-data-dir`. Test launches
+  use a temporary profile, and the migration is tested against a fake home folder
+  (`CFFIXED_USER_HOME`), never the real one.
+- Linux and Windows packaging changes (desktop entry, NSIS script, `.ico`,
+  `.deb`/`.rpm` names) have not been run on those systems. The macOS bundle has:
+  `electron-builder --mac --dir` produces `markDX.app` and it launches.
+- After pulling a branch that changes locale files, run `pnpm minify-locales`.
+  Dev builds read the git-ignored `*.min.json`, so stale ones still say MarkText
+  in the application menu.
+- Running e2e and then lint fails lint on `packages/desktop/test-results/.last-run.json`:
+  the root ESLint config ignores `test-results/` only at the repo root. Delete the
+  folder before linting. (`eslint.config.js` is protected; not changed.)

@@ -65,12 +65,42 @@ either a Node version below 25 or the flag above.
 **Reference baseline for later phases:** `NODE_OPTIONS=--no-experimental-webstorage pnpm test:unit`
 = 737 passed. Without the flag, exactly these 4 failures are expected and no others.
 
+## End-to-end baseline (added during Phase 0)
+
+Run on a build of the untouched tree (commit `645c6971`, a separate git worktree),
+with `pnpm build:unpack` then `pnpm exec playwright test test/e2e` in
+`packages/desktop`:
+
+**211 passed, 4 failed, 4 skipped** (59 spec files, 1.6 min).
+
+The 4 failures are all in `test/e2e/export-pdf.spec.ts` and all the same error:
+
+```
+strict mode violation: locator('.print-settings-dialog .button-primary') resolved to 2 elements:
+    1) <button class="button-primary">Preview</button>
+    2) <button class="button-primary">Export...</button>
+```
+
+The spec predates the fork's Preview button (`FORK_DELTA.md`, section C), which
+added a second primary button to the export dialog. The feature works; the
+selector is stale. The spec was not edited: see Q5 in `PROGRESS.md`.
+
+**Known flake.** Specs that type with `page.keyboard.type(text, { delay: 0 })`
+(`editor-input.spec.ts`, `code-block-typing.spec.ts`) occasionally lose the last
+typed character when the machine is busy. Measured over four interleaved rounds of
+those two spec files at `--repeat-each 12`, with the load average near 30:
+baseline 432 of 432 passed, rebrand build 430 of 432. In full-suite runs it
+appeared once in each of two rebrand runs (a different test each time) and not in
+the single baseline run. That difference is within chance and the rebrand changes
+no code on the typing path, but it has not been proven to be unrelated. A failure
+of this shape (expected text present except its final character) should be re-run
+before it is treated as real.
+
 ## Not run at baseline
 
 | Check | Why not |
 |---|---|
-| `pnpm test:e2e` (desktop Playwright, 59 spec files) | needs a build and opens Electron windows; will be baselined before the first phase that adds e2e tests |
-| Muya Playwright suite (`packages/muya/e2e`) | same |
+| Muya Playwright suite (`packages/muya/e2e`) | needs its own dev server and browsers; will be baselined before the first phase that changes Muya |
 | `pnpm lint` inside `packages/muya` and `packages/website` | those packages lint themselves and are excluded from the root config; not part of the requested baseline |
 | `pnpm build`, platform packaging | not requested for the baseline; first needed in Phase 0 |
 | `pnpm gen-third-party`, `pnpm validate-licenses` | first needed when a dependency is added |
