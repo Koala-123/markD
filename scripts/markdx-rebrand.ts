@@ -12,6 +12,11 @@
  * `window.marktext` bridge, `MARKTEXT_*` constants, locale keys), repository
  * URLs, comments, and anything git does not track (node_modules, build
  * output, generated `*.min.json`).
+ *
+ * The line filters are heuristics, not parsers. They would also rename a bare
+ * identifier spelled exactly FROM, or a JSON key inside an object written on
+ * one line. Neither exists today; on a new base, read the dry run, which
+ * prints every line it would change.
  */
 import { execFileSync } from 'child_process'
 import fs from 'fs'
@@ -88,6 +93,9 @@ const LITERALS: Array<[file: string, from: string, to: string]> = [
   ['packages/desktop/electron-builder.yml', "StartupWMClass: 'marktext'", "StartupWMClass: 'markdx'"],
   ['packages/desktop/electron-builder.yml', "Keywords: 'marktext;'", "Keywords: 'markdx;'"],
   ['packages/desktop/src/main/index.ts', "setAppUserModelId('com.electron.marktext')", "setAppUserModelId('com.markdx.app')"],
+  ['packages/desktop/src/main/cli/index.ts', 'Usage: marktext [commands]', 'Usage: markdx [commands]'],
+  ['.github/workflows/release.yml', 'After dragging MarkText into Applications', 'After dragging markDX into Applications'],
+  ['.github/workflows/release.yml', '/Applications/marktext.app', '/Applications/markDX.app'],
   ['packages/desktop/build/windows/installer.nsh', '$INSTDIR\\marktext.exe', '$INSTDIR\\markdx.exe'],
   // The uninstaller's "delete user settings" must remove this app's folder,
   // not the one a MarkText install next to it still uses.
@@ -141,11 +149,13 @@ for (const { pathspecs, mode } of RULES) {
 
 for (const [file, from, to] of LITERALS) {
   const before = read(file)
-  // A literal counts as applied once its replacement text is present.
-  if (before.includes(to)) continue
   if (!before.includes(from)) {
-    problems++
-    console.log(`MISSING  ${file}: neither ${JSON.stringify(from)} nor its replacement`)
+    // Already applied, unless the replacement is missing too: then the file
+    // has drifted and this entry needs a human.
+    if (!before.includes(to)) {
+      problems++
+      console.log(`MISSING  ${file}: neither ${JSON.stringify(from)} nor its replacement`)
+    }
     continue
   }
   const count = before.split(from).length - 1

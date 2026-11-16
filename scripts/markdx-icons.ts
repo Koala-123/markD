@@ -71,20 +71,23 @@ const icns = async(): Promise<Buffer | null> => {
   }
   const out = path.join(path.dirname(iconset), 'icon.icns')
   execFileSync('iconutil', ['-c', 'icns', iconset, '-o', out])
-  return fs.readFileSync(out)
+  const data = fs.readFileSync(out)
+  fs.rmSync(path.dirname(iconset), { recursive: true, force: true })
+  return data
 }
 
 const main = async(): Promise<void> => {
-  const icoSizes = [16, 24, 32, 48, 64, 128, 256]
+  const icoData = await ico([16, 24, 32, 48, 64, 128, 256])
+  const icnsData = await icns()
   const outputs: Record<string, Buffer | null> = {
     'static/icon.png': await png(256),
     'static/logo-96px.png': await png(96),
     'static/logo-small.png': await png(1024),
-    'static/icon.ico': await ico(icoSizes),
-    'static/icon.icns': await icns(),
+    'static/icon.ico': icoData,
+    'static/icon.icns': icnsData,
     'build/icons/icon.png': await png(1024),
-    'build/icons/icon.ico': await ico(icoSizes),
-    'build/icons/icon.icns': await icns(),
+    'build/icons/icon.ico': icoData,
+    'build/icons/icon.icns': icnsData,
     'src/renderer/src/assets/images/logo.png': await png(150)
   }
   for (const size of [16, 24, 32, 48, 64, 128, 256, 512]) {

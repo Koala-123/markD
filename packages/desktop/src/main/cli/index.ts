@@ -17,7 +17,7 @@ const cli = (): ParsedArgs => {
 
   const args = parseArgs(argv, true)
   if (args['--help']) {
-    write(`Usage: marktext [commands] [path ...]
+    write(`Usage: markdx [commands] [path ...]
 
   Available commands:
 

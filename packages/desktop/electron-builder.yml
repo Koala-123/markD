@@ -167,3 +167,10 @@ linux:
     - ext: 'mdtext'
       name: 'Markdown'
       description: 'Markdown document'
+# fpm names the package after package.json `name`, which stays `marktext`.
+# Without these, a markDX .deb or .rpm installs as an upgrade of MarkText and
+# removes it.
+deb:
+  packageName: markdx
+rpm:
+  packageName: markdx
