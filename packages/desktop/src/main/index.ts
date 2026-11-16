@@ -1,3 +1,4 @@
+import './markdx/bootstrap'
 import './globalSetting'
 import path from 'path'
 import { app, dialog, crashReporter } from 'electron'
