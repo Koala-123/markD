@@ -1,17 +1,17 @@
 [Desktop Entry]
-Name=MarkText
+Name=markDX
 Comment=Next generation markdown editor
-Exec=marktext %F
+Exec=markdx %F
 Terminal=false
 Type=Application
-Icon=marktext
+Icon=markdx
 Categories=Office;TextEditor;Utility;
 MimeType=text/markdown;
-Keywords=marktext;
-StartupWMClass=marktext
+Keywords=markdx;
+StartupWMClass=markdx
 Actions=NewWindow;
 
 [Desktop Action NewWindow]
 Name=New Window
-Exec=marktext --new-window %F
-Icon=marktext
+Exec=markdx --new-window %F
+Icon=markdx

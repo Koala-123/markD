@@ -1,7 +1,8 @@
 {
   "name": "marktext",
+  "productName": "markDX",
   "version": "0.20.0-dev",
-  "description": "MarkText",
+  "description": "markDX",
   "main": "./out/main/index.js",
   "author": {
     "name": "Jocs",
