@@ -61,15 +61,33 @@ otherwise.
 
 ## Next
 
-Phase 1, on `markdx/phase-1-modes` cut from `brand/markdx`:
+Phase 2 (Marp decks), on `markdx/phase-2-marp` cut from `markdx/phase-1-modes`.
+Built as slices that each work on their own, in this order:
 
-1. `detectMode()` as a pure function with unit tests: `marp: true` → Deck;
-   `.ipynb` or `markdx: notebook` → Notebook; otherwise Doc.
-2. A small Pinia store for the per-tab manual override (new file; no edit to the
-   2,100-line editor store).
-3. Segmented control in the title bar, built as a `radiogroup` with arrow-key
-   navigation and a live announcement (R1), plus three command-palette commands.
-4. e2e: cursor and undo history survive a switch; the text is byte-identical.
+1. **Engine.** `@marp-team/marp-core` 4.4.0 (MIT) behind one function:
+   Markdown in, per-slide HTML, CSS and speaker notes out, raw HTML off. Measured
+   with the copy inside the installed Marp CLI: `render(md, { htmlAsArray: true })`
+   returns `{ html[], css, comments[][] }`, and a 40-slide deck renders in about
+   16 ms warm, so the 150 ms target leaves room for the DOM update.
+2. **Preview.** One sandboxed iframe (scripts allowed, opaque origin, no
+   same-origin) holding the filmstrip and the slide canvas, fed by `postMessage`
+   and patched slide by slide. Open questions to settle with a single probe run:
+   whether a sandboxed `srcdoc` frame may load the frame script and local images
+   when the renderer is served from `file://`, and how the renderer's inherited
+   CSP (`script-src 'self'`) treats it.
+3. **Slide boundaries in the editor.** CSS only, keyed on `body[data-markdx-mode]`
+   plus a flag for `marp: true`; no Muya change.
+4. **Themes.** default, gaia, uncover from marp-core; "Paper" and "Ink" as new CSS
+   files; user themes from a folder.
+5. **Directive inspector.** Edits front matter, so it is the one place in this
+   phase that changes text, and it must do so through the editor so undo works.
+6. **Presenter window.** New window, typed IPC, current and next slide, notes,
+   timer.
+7. **Export.** HTML, PDF (`printToPDF` at the deck size), PNG per slide, PPTX as
+   images. PPTX is a zip of PNGs and fixed XML: written by hand with stored
+   (uncompressed) entries, so no new dependency.
+8. **Checks.** Visual diff against Marp CLI for the built-in themes (opt-in: it
+   needs the CLI and a browser), and a timing test for the 40-slide deck.
 
 ## Decisions
 
