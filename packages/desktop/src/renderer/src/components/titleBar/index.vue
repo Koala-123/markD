@@ -17,6 +17,7 @@
     >
       <div
         class="title"
+        :class="{ 'with-mode-switch': showModeSwitch }"
         @dblclick.stop="toggleMaxmizeOnMacOS"
       >
         <span v-if="!filename">markDX</span>
@@ -133,6 +134,7 @@
         </div>
       </div>
     </div>
+    <mode-switch :visible="showModeSwitch" />
   </div>
 </template>
 
@@ -145,6 +147,7 @@ import { minimizePath, restorePath, maximizePath, closePath } from '../../assets
 import { PATH_SEPARATOR } from '../../config'
 import { isOsx as isOsxPlatform } from '@/util'
 import { shouldShowInAppTitleBar } from './visibility'
+import ModeSwitch from '../modeSwitch/index.vue'
 import { useEditorStore } from '@/store/editor'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight } from '@element-plus/icons-vue'
@@ -225,6 +228,9 @@ const showCustomTitleBar = computed(() => {
 const showTitleBar = computed(() => {
   return shouldShowInAppTitleBar(titleBarStyle.value, isOsx)
 })
+
+// A mode is a view of an open file, so there is nothing to switch without one.
+const showModeSwitch = computed(() => showTitleBar.value && !!props.filename)
 
 watch(
   () => props.filename,
@@ -368,6 +374,14 @@ img {
     z-index: 1;
     -webkit-app-region: no-drag;
   }
+}
+/* Symmetric, so the file name stays centred in the window while leaving
+   room for the mode switch on the right. */
+.title.with-mode-switch {
+  padding: 0 345px;
+}
+.isOsx .title.with-mode-switch {
+  padding: 0 270px;
 }
 div.title > span {
   /* Workaround for GH#339 */

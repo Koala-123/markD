@@ -3,6 +3,7 @@ import bus from '../bus'
 import { delay, isOsx } from '@/util'
 import { isUpdatable } from './utils'
 import getCommandDescriptionById from './descriptions'
+import { markdxCommands } from './markdx'
 import { t } from '../i18n'
 
 export { default as FileEncodingCommand } from './fileEncoding'
@@ -744,6 +745,8 @@ export const getCommandsWithDescriptions = async(): Promise<CommandDescriptor[]>
   updateDescriptions(commands)
   return commands
 }
+
+commands.push(...markdxCommands)
 
 // Complete all command descriptions for initial load.
 for (const item of commands) {

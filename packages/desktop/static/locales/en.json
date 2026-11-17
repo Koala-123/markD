@@ -986,5 +986,21 @@
       "switchError": "Spellcheck switch error for {languageCode}, {error}",
       "title": "Spellcheck"
     }
+  },
+  "markdx": {
+    "mode": {
+      "label": "View mode",
+      "doc": "Doc",
+      "deck": "Deck",
+      "notebook": "Notebook",
+      "switched": "{mode} view"
+    },
+    "commands": {
+      "mode": {
+        "doc": "View: Doc Mode",
+        "deck": "View: Deck Mode",
+        "notebook": "View: Notebook Mode"
+      }
+    }
   }
 }
