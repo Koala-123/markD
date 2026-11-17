@@ -85,16 +85,31 @@ The spec predates the fork's Preview button (`FORK_DELTA.md`, section C), which
 added a second primary button to the export dialog. The feature works; the
 selector is stale. The spec was not edited: see Q5 in `PROGRESS.md`.
 
-**Known flake.** Specs that type with `page.keyboard.type(text, { delay: 0 })`
-(`editor-input.spec.ts`, `code-block-typing.spec.ts`) occasionally lose the last
-typed character when the machine is busy. Measured over four interleaved rounds of
-those two spec files at `--repeat-each 12`, with the load average near 30:
-baseline 432 of 432 passed, rebrand build 430 of 432. In full-suite runs it
-appeared once in each of two rebrand runs (a different test each time) and not in
-the single baseline run. That difference is within chance and the rebrand changes
-no code on the typing path, but it has not been proven to be unrelated. A failure
-of this shape (expected text present except its final character) should be re-run
-before it is treated as real.
+**The suite is noisy on this machine.** Beyond the four stable `export-pdf`
+failures, a full run usually has zero to two more, and they move around. Six full
+runs on 2026-11-16 and 17, alternating builds:
+
+| Build | Extra failures (besides the four `export-pdf`) |
+|---|---|
+| untouched baseline | none |
+| untouched baseline | `code-block-typing:55`, `find-replace:212` |
+| untouched baseline | `find-replace:193`, `find-replace:212` |
+| rebrand | `code-block-typing:55` |
+| rebrand | `editor-input:48` |
+| rebrand | none |
+
+A seventh run, on the rebrand build with the load average above 20, failed
+`fixture-render:24` and `parity-pg1-menu-state:125` instead. The one CI run (Linux,
+PR #1) failed `editor-input:48`.
+
+The typing failures all have the same shape: text typed with
+`page.keyboard.type(text, { delay: 0 })` arrives without its last character. They
+occur on the untouched baseline, so they are not caused by markDX changes.
+
+What this means for later phases: a full e2e run is not a reliable regression
+signal here. Each phase is checked with its own spec files and the specs for the
+code it touched, run once, and a failure of the kinds above is not re-run to
+prove a point.
 
 ## Not run at baseline
 

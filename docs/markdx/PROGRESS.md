@@ -8,8 +8,8 @@ protected) and `BASELINE.md` (what "green" means here).
 | Phase | Status | Branch |
 |---|---|---|
 | Step 0: audit | **done** | `markdx/step-0-audit` |
-| Phase 0: rebrand | **done**, PR open | `brand/markdx` |
-| Phase 1: modes shell | next | `markdx/phase-1-modes` |
+| Phase 0: rebrand | **done**, pushed | `brand/markdx` |
+| Phase 1: modes shell | in progress | `markdx/phase-1-modes` |
 | Phase 2: Marp decks | not started | `markdx/phase-2-marp` |
 | Phase 3: notebooks | not started, **blocked on Q1** | `markdx/phase-3-notebooks` |
 | Phase 4: Zotero | not started, **blocked on Q1** | `markdx/phase-4-zotero` |
@@ -32,6 +32,12 @@ pass the brief already asked for:
 - Not promised: the Muya editing surface itself is one large `contenteditable`.
   Its screen-reader behaviour will be measured in Phase 5 and reported honestly
   rather than assumed to be fixable in one pass.
+
+**R2. No pull requests (2026-11-17).** "Don't put PRs, just push them. This is my
+fork of the repo, not the official marktext." Each phase branch is pushed to the
+`fork` remote and that is all. This replaces "one PR per phase" in the brief. PR #1
+(Phase 0) was opened before this and is left as it is until the owner says
+otherwise.
 
 ## Done
 
@@ -70,9 +76,9 @@ Phase 1, on `markdx/phase-1-modes` cut from `brand/markdx`:
 | # | Decision | Why |
 |---|---|---|
 | D1 | `origin` is treated as upstream; no `upstream` remote added. | `origin` already points at `marktext/marktext`. |
-| D2 | Push only to the `fork` remote. Every `gh` command passes `--repo Koala-123/markD`. | `origin` is upstream. A bare `gh pr create` could open a pull request against MarkText itself. |
+| D2 | Push only to the `fork` remote. Every `gh` command passes `--repo Koala-123/markD`. No pull requests (R2). | `origin` is upstream. A bare `gh pr create` could open a pull request against MarkText itself. |
 | D3 | Fork delta is measured against `origin/develop` at `e52106fd`. | `master` is frozen at v0.19.0. |
-| D4 | markDX branches are cut from `fix/math-recognition-and-export-compat`, stacked one on the next. Each PR's base is the previous branch in the stack. | `fork/develop` contains none of the fork's five commits, so cutting from it would drop protected work. Stacking keeps each PR to one phase. |
+| D4 | markDX branches are cut from `fix/math-recognition-and-export-compat`, stacked one on the next. | `fork/develop` contains none of the fork's five commits, so cutting from it would drop protected work. Stacking keeps each branch to one phase. |
 | D5 | pnpm 10.33.4 is run from a temporary folder; installs use `--frozen-lockfile`. | pnpm is not on `PATH`; the lockfile was hand-edited and must not be re-resolved. |
 | D6 | Unit tests are compared with `NODE_OPTIONS=--no-experimental-webstorage`. | Node 26 breaks one protected spec for reasons unrelated to the code. See `BASELINE.md`. |
 | D7 | Work proceeds on the current base (upstream as of `e52106fd`). No upstream merge. | A merge would rewrite protected files. That is the owner's call: see Q1. |
@@ -138,6 +144,13 @@ plainly stale rather than the feature broken. Not edited. Recommended one-line f
 select the Export button by its text or as the last `.button-primary`.
 
 ## Things to remember
+
+- **CI on the fork runs only on pull requests** (`lint`, `test`, `e2e`, licence
+  validation, and packaging builds for Linux, macOS and Windows). With no PRs (R2)
+  nothing runs automatically, so every check is run locally. The one CI run that
+  exists, on PR #1, showed: lint, unit tests (Node 22.21.1, 51 files) and licence
+  validation pass, and all five packaging builds succeed. That is the only
+  evidence that the Windows and Linux packaging changes build.
 
 - The fork is public. Anything pushed is visible.
 - `CLAUDE.md` is stale in places (website stack, marked version). Trust the code.
