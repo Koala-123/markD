@@ -8,6 +8,9 @@
  * change FROM / TO and the LITERALS table and re-run. A second run is a no-op
  * because nothing matches any more.
  *
+ * Only the capitalised word is renamed, so lowercase identifiers and URLs
+ * (`marktext` packages, `github.com/marktext/...`) are never touched.
+ *
  * Deliberately out of scope: identifiers (`marktext` package names, the
  * `window.marktext` bridge, `MARKTEXT_*` constants, locale keys), repository
  * URLs, comments, and anything git does not track (node_modules, build
@@ -25,13 +28,16 @@ import { fileURLToPath } from 'url'
 
 const FROM = 'MarkText'
 const TO = 'markDX'
+// Put this on a line (as an HTML or code comment) to keep FROM on it.
+const KEEP = 'keep-upstream-name'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const apply = process.argv.includes('--apply')
 
 // `\b` keeps identifiers such as `MarkTextLogo` out: there is no boundary
 // between `Text` and `Logo`.
-const WORD = new RegExp(`\\b${FROM}\\b`, 'g')
+// `Marktext` is an older spelling still found in prose.
+const WORD = new RegExp(`\\b(?:${FROM}|Marktext)\\b`, 'g')
 const swap = (text: string): string => text.replace(WORD, TO)
 
 // Each mode decides which part of a line is prose that may be renamed.
@@ -50,7 +56,10 @@ const modes = {
   },
   assertion: (line: string): string => (line.includes('expect(') ? swap(line) : line),
   description: (line: string): string => (/^\s*"description"\s*:/.test(line) ? swap(line) : line),
-  wholeLine: swap
+  wholeLine: swap,
+  // Everything on the line, except a line marked to keep the old name (the
+  // README's credit to the upstream project).
+  prose: (line: string): string => (line.includes(KEEP) ? line : swap(line))
 }
 
 const RULES: Array<{ pathspecs: string[]; mode: keyof typeof modes }> = [
@@ -76,6 +85,30 @@ const RULES: Array<{ pathspecs: string[]; mode: keyof typeof modes }> = [
       'packages/desktop/build/windows/installer.nsh'
     ],
     mode: 'wholeLine'
+  },
+  // Prose and comments everywhere else. Left alone: the upstream copyright in
+  // LICENSE, changelogs and third-party licences (records of what happened
+  // under the old name), the markDX docs that describe upstream on purpose,
+  // the migration code, and this script.
+  {
+    pathspecs: [
+      'README.md',
+      'CLAUDE.md',
+      ':(glob)docs/**',
+      ':(glob).github/**',
+      ':(glob)packages/website/**',
+      ':(glob)packages/muya/**',
+      ':(glob)packages/desktop/**',
+      ':(glob)scripts/**',
+      ':(exclude)docs/markdx',
+      ':(exclude,glob)**/CHANGELOG.md',
+      ':(exclude,glob)**/THIRD-PARTY-LICENSES*',
+      ':(exclude)packages/desktop/src/main/markdx',
+      ':(exclude)packages/desktop/test/unit/specs/markdx-legacy.spec.ts',
+      ':(exclude)scripts/markdx-rebrand.ts',
+      ':(exclude,glob)**/*.{png,ico,icns,jpg,jpeg,gif,webp,woff,woff2,ttf}'
+    ],
+    mode: 'prose'
   }
 ]
 

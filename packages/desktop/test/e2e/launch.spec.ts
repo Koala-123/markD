@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import type { ElectronApplication, Page } from 'playwright'
 import { launchElectron } from './helpers'
 
-test.describe('Check Launch MarkText', () => {
+test.describe('Check Launch markDX', () => {
   let app: ElectronApplication
   let page: Page
 
@@ -16,7 +16,7 @@ test.describe('Check Launch MarkText', () => {
     await app.close()
   })
 
-  test('Empty MarkText', async() => {
+  test('Empty markDX', async() => {
     const title = await page.title()
     expect(/^markDX|Untitled-1 - markDX$/.test(title)).toBeTruthy()
   })

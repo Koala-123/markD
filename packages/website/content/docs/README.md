@@ -1,6 +1,6 @@
 # User Documentation
 
-Welcome to the end-user documentation of MarkText.
+Welcome to the end-user documentation of markDX.
 
 ![](assets/marktext-interface-2.png)
 

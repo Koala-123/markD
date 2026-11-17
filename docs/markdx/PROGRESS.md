@@ -36,8 +36,16 @@ pass the brief already asked for:
 **R2. No pull requests (2026-11-17).** "Don't put PRs, just push them. This is my
 fork of the repo, not the official marktext." Each phase branch is pushed to the
 `fork` remote and that is all. This replaces "one PR per phase" in the brief. PR #1
-(Phase 0) was opened before this and is left as it is until the owner says
-otherwise.
+(Phase 0) was opened before this; the owner asked for it to be removed, so it was
+closed on 2026-11-17 (GitHub does not allow deleting a pull request).
+
+**R3. "This is not marktext anymore" (2026-11-17).** The owner asked for the README
+and everything that calls the product MarkText to say markDX. Done with
+`scripts/markdx-rebrand.ts` (prose rule) and a rewritten README. The capitalised
+name is kept only where it states a fact about upstream: the `LICENSE` copyright,
+changelogs, third-party licences, `docs/markdx/`, the README credit line, and a few
+comments and website lines about MarkText's history, each marked
+`keep-upstream-name`. Lowercase identifiers and upstream URLs are unchanged.
 
 ## Done
 

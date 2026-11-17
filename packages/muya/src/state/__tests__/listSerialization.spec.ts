@@ -333,7 +333,7 @@ sep
     //
     // These also surface a separate latent bug in `insertLineBreak`: blank
     // lines inside a list item were carrying the item's indent as trailing
-    // whitespace (`"  \n"` instead of `"\n"`). Marktext shipped the same
+    // whitespace (`"  \n"` instead of `"\n"`). MarkText shipped the same (keep-upstream-name)
     // bug, but it's serialization-correctness — fix it as part of the
     // stateToMarkdown baseline.
     it('round-trips a loose list with a subsequent paragraph', () => {

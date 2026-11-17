@@ -1,6 +1,6 @@
-# Releasing MarkText
+# Releasing markDX
 
-The release pipeline is triggered by pushing a `v*` tag. The `Release MarkText` workflow (`.github/workflows/release.yml`) then runs **validate → build (5-platform matrix) → publish** and creates a GitHub Release with installers and `SHA256SUMS.txt`.
+The release pipeline is triggered by pushing a `v*` tag. The `Release markDX` workflow (`.github/workflows/release.yml`) then runs **validate → build (5-platform matrix) → publish** and creates a GitHub Release with installers and `SHA256SUMS.txt`.
 
 The flow below covers both release candidates and stable releases — same steps, only the version string differs.
 

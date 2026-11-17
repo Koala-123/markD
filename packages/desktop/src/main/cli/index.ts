@@ -11,7 +11,7 @@ const writeLine = (s: string): boolean => write(s + '\n')
 const cli = (): ParsedArgs => {
   let argv = process.argv.slice(1)
   if (process.env.NODE_ENV === 'development') {
-    // Don't pass electron development arguments to MarkText and change user data path.
+    // Don't pass electron development arguments to markDX and change user data path.
     argv = ['--user-data-dir', path.join(getPath('appData'), 'marktext-dev')]
   }
 

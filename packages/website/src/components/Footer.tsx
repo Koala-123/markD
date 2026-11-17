@@ -38,7 +38,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="foot-bot">
-          <span>© 2017–2026 MarkText · Released under the MIT License</span>
+          <span>© 2017–2026 MarkText contributors · markDX is a fork of MarkText · Released under the MIT License</span>{/* keep-upstream-name */}
           <div className="foot-social">
             <a className="icon-btn" href={DOWNLOAD.repo} {...EXT_LINK} aria-label="GitHub">
               <GitHubIcon />
