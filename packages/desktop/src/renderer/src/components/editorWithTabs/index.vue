@@ -5,7 +5,10 @@
   >
     <tabs v-show="showTabBar" />
     <format-toolbar v-show="!sourceCode" />
-    <div class="container">
+    <div
+      class="container"
+      :class="{ 'with-deck': viewMode === 'deck' }"
+    >
       <editor
         :markdown="markdown"
         :cursor="cursor"
@@ -18,6 +21,7 @@
         :muya-index-cursor="muyaIndexCursor"
         :text-direction="textDirection"
       />
+      <deck-pane v-if="viewMode === 'deck'" />
     </div>
     <tab-notifications />
   </div>
@@ -31,6 +35,8 @@ import Editor from './editor.vue'
 import SourceCode from './sourceCode.vue'
 import TabNotifications from './notifications.vue'
 import FormatToolbar from '../formatToolbar/index.vue'
+import DeckPane from '../deckPane/index.vue'
+import { useModeStore } from '@/store/markdxMode'
 
 defineProps<{
   markdown: string
@@ -46,6 +52,7 @@ defineProps<{
 }>()
 
 const { effectiveSideBarWidth } = storeToRefs(useLayoutStore())
+const { mode: viewMode } = storeToRefs(useModeStore())
 </script>
 
 <style scoped>
@@ -61,6 +68,13 @@ const { effectiveSideBarWidth } = storeToRefs(useLayoutStore())
   & > .container {
     flex: 1;
     overflow: hidden;
+  }
+  /* Deck mode: the editor keeps the left, the slides take the right. */
+  & > .container.with-deck {
+    display: flex;
+    & > .editor-wrapper {
+      min-width: 0;
+    }
   }
 }
 </style>

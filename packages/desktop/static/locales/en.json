@@ -1001,6 +1001,14 @@
         "deck": "Mode: Deck",
         "notebook": "Mode: Notebook"
       }
+    },
+    "deck": {
+      "label": "Slides",
+      "filmstrip": "Slide list",
+      "slideOf": "Slide {current} of {total}",
+      "goTo": "Go to slide {number}: {title}",
+      "untitled": "untitled",
+      "notes": "Notes:"
     }
   }
 }
