@@ -997,9 +997,9 @@
     },
     "commands": {
       "mode": {
-        "doc": "View: Doc Mode",
-        "deck": "View: Deck Mode",
-        "notebook": "View: Notebook Mode"
+        "doc": "Mode: Doc",
+        "deck": "Mode: Deck",
+        "notebook": "Mode: Notebook"
       }
     }
   }

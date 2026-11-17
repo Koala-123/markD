@@ -13,20 +13,25 @@ export const isMode = (value: unknown): value is Mode => MODES.includes(value as
 const FRONT_MATTER = /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
 
 /**
- * Reads one top-level scalar from front matter text.
+ * Reads one top-level scalar from front matter text, with no regex that can
+ * backtrack: this runs on every keystroke.
  *
  * ponytail: line-based, not a YAML parser. It sees `key: value` at column 0
  * with an optional trailing comment and optional quotes, which is all mode
- * detection needs. Nested keys, multi-line and flow values are ignored.
- * Replace with a real parser when the Phase 2 directive inspector has to
- * edit front matter rather than only read two keys from it.
+ * detection needs. Nested keys, multi-line and flow values are ignored, and
+ * the first duplicate key wins. Replace with a real parser when the Phase 2
+ * directive inspector has to edit front matter rather than read two keys.
  */
-const topLevelScalar = (frontMatter: string, key: string): string | undefined => {
+const topLevelScalar = (frontMatter: string, key: string): { value: string; quoted: boolean } | undefined => {
   for (const line of frontMatter.split(/\r?\n/)) {
-    const match = /^([A-Za-z_][\w-]*)[ \t]*:[ \t]*(.*?)[ \t]*$/.exec(line)
-    if (!match || match[1] !== key) continue
-    const quoted = /^(["'])(.*)\1(?:[ \t]+#.*)?$/.exec(match[2])
-    return quoted ? quoted[2] : match[2].replace(/[ \t]+#.*$/, '')
+    // YAML needs whitespace (or the end of the line) after the colon.
+    const head = /^([A-Za-z_][\w-]*)[ \t]*:(?=[ \t]|$)/.exec(line)
+    if (!head || head[1] !== key) continue
+    const rest = line.slice(head[0].length).trim()
+    const quoted = /^(["'])([^"']*)\1/.exec(rest)
+    if (quoted) return { value: quoted[2], quoted: true }
+    const comment = rest.search(/[ \t]#/)
+    return { value: (comment === -1 ? rest : rest.slice(0, comment)).trim(), quoted: false }
   }
   return undefined
 }
@@ -43,13 +48,16 @@ const topLevelScalar = (frontMatter: string, key: string): string | undefined =>
 export const detectMode = (pathname: string, markdown: string): Mode => {
   const frontMatter = FRONT_MATTER.exec(markdown)?.[1] ?? ''
 
-  const requested = topLevelScalar(frontMatter, 'markdx')
+  const requested = topLevelScalar(frontMatter, 'markdx')?.value
   if (isMode(requested)) return requested
 
   if (/\.ipynb$/i.test(pathname)) return 'notebook'
 
-  // YAML 1.2 core schema spellings of boolean true.
-  if (/^(?:true|True|TRUE)$/.test(topLevelScalar(frontMatter, 'marp') ?? '')) return 'deck'
+  // Marp wants the boolean true: one of its YAML 1.2 spellings, unquoted.
+  // A quoted "true" is a string, and Marp ignores it, so a deck it would not
+  // render is not shown as one here.
+  const marp = topLevelScalar(frontMatter, 'marp')
+  if (marp && !marp.quoted && /^(?:true|True|TRUE)$/.test(marp.value)) return 'deck'
 
   return 'doc'
 }

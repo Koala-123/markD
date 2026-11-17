@@ -9,7 +9,7 @@ protected) and `BASELINE.md` (what "green" means here).
 |---|---|---|
 | Step 0: audit | **done** | `markdx/step-0-audit` |
 | Phase 0: rebrand | **done**, pushed | `brand/markdx` |
-| Phase 1: modes shell | in progress | `markdx/phase-1-modes` |
+| Phase 1: modes shell | **done**, pushed | `markdx/phase-1-modes` |
 | Phase 2: Marp decks | not started | `markdx/phase-2-marp` |
 | Phase 3: notebooks | not started, **blocked on Q1** | `markdx/phase-3-notebooks` |
 | Phase 4: Zotero | not started, **blocked on Q1** | `markdx/phase-4-zotero` |
@@ -58,6 +58,17 @@ otherwise.
   - Protected files touched: `static/locales/en.json` (13 values, word swap only;
     the fork's own keys untouched) and `packages/desktop/package.json` (description,
     plus one added `productName` line).
+
+## Phase 1 known limits (from review, not fixed)
+
+- Tab does not reach the switch from the editor (Muya keeps Tab for indenting).
+  The keyboard route is the palette: "Mode: Doc / Deck / Notebook".
+- With the native title bar on Windows or Linux there is no visible switch, only
+  the palette. A View-menu entry would fix it.
+- Narrow windows (under about 700 px) can squeeze the file name out of the title
+  bar; on macOS a four-digit word count may sit under the switch. Not measured.
+- Detection reads front matter line by line, not as YAML: first duplicate key
+  wins, multi-line quoted values can be misread.
 
 ## Next
 

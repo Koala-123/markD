@@ -9,7 +9,9 @@
     @keydown="onKeydown"
   >
     <!-- mousedown.prevent: a click must not take focus (and the caret) away
-         from the editor. Keyboard users still reach the group with Tab. -->
+         from the editor. Tab does not reach this group from the editor, which
+         keeps Tab for indenting; the keyboard route there is the command
+         palette ("Mode: Doc" and so on). -->
     <button
       v-for="item in MODES"
       :key="item"
@@ -62,6 +64,7 @@ watch(switchCount, async () => {
 
 // Radio group keyboard pattern: arrows move and select, Home/End jump.
 const onKeydown = async (event: KeyboardEvent): Promise<void> => {
+  if (event.altKey || event.ctrlKey || event.metaKey) return
   if (event.key === 'Escape') {
     bus.emit('editor-focus')
     return
@@ -110,18 +113,27 @@ const onKeydown = async (event: KeyboardEvent): Promise<void> => {
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: var(--editorColor80);
+  /* Full-strength theme text: the 80% tint fails 4.5:1 in several themes. */
+  color: var(--editorColor);
   font: inherit;
   font-size: 12px;
   line-height: 20px;
   cursor: pointer;
 }
 .mode-switch-option:hover {
-  color: var(--editorColor);
+  background: var(--editorColor10);
 }
+/* Two rings, editor background inside and editor text outside, so the focus
+   is visible against any theme rather than depending on --themeColor. */
 .mode-switch-option:focus-visible {
-  outline: 2px solid var(--themeColor);
-  outline-offset: 1px;
+  outline: 2px solid var(--editorColor);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--editorBgColor);
+}
+@media (forced-colors: active) {
+  .mode-switch-option[aria-checked='true'] {
+    outline: 2px solid CanvasText;
+  }
 }
 /* Mode accents: Doc ink, Deck vermilion, Notebook teal. Text colours are
    fixed with them so contrast does not depend on the editor theme. */

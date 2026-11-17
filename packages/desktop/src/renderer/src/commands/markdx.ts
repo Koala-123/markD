@@ -10,6 +10,8 @@ export const markdxCommands: CommandDescriptor[] = MODES.map((mode) => ({
   id: modeCommandId(mode),
   execute: async() => {
     bus.emit('markdx:set-mode', mode)
+    // The palette took focus; give it back, as the other view commands do.
+    setTimeout(() => bus.emit('editor-focus'), 10)
   }
 }))
 

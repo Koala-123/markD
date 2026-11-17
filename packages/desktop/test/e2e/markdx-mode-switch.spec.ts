@@ -71,6 +71,8 @@ const bodyMode = (page: Page): Promise<string | undefined> =>
 const DOC = 'alpha first\n\nbeta second\n\ngamma third line\n'
 
 test.describe('markDX mode switch', () => {
+  // Each test continues from the state the previous one left.
+  test.describe.configure({ mode: 'serial' })
   let app: ElectronApplication
   let page: Page
 
@@ -121,8 +123,8 @@ test.describe('markDX mode switch', () => {
     await sendIpcToRenderer(app, 'mt::show-command-palette')
     const search = page.locator('.search-wrapper input.search, input.search').first()
     await expect(search).toBeVisible()
-    await search.fill('Notebook Mode')
-    await page.locator('.command-palette li, ul.commands li').filter({ hasText: 'View: Notebook Mode' }).first().click()
+    await search.fill('Mode: Notebook')
+    await page.locator('.command-palette li, ul.commands li').filter({ hasText: 'Mode: Notebook' }).first().click()
 
     await expect(radio(page, 'Notebook')).toBeChecked()
     expect(await bodyMode(page)).toBe('notebook')

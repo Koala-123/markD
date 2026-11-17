@@ -18,19 +18,23 @@ describe('detectMode', () => {
       expect(detectMode('/talk.md', fm('marp: true', 'theme: gaia'))).toBe('deck')
     })
 
-    it.each(['true', 'True', 'TRUE', '"true"', "'true'", 'true # use Marp'])(
+    it.each(['true', 'True', 'TRUE', 'true # use Marp', 'true\t# use Marp'])(
       'accepts `marp: %s`',
       (value) => {
         expect(detectMode('/talk.md', fm(`marp: ${value}`))).toBe('deck')
       }
     )
 
-    it.each(['false', 'yes', '1', '', 'truely'])('does not accept `marp: %s`', (value) => {
+    it.each(['false', 'yes', '1', '', 'truely', '"true"', "'true'"])('does not accept `marp: %s`', (value) => {
       expect(detectMode('/talk.md', fm(`marp: ${value}`))).toBe('doc')
     })
 
     it('ignores a nested or indented marp key', () => {
       expect(detectMode('/a.md', fm('options:', '  marp: true'))).toBe('doc')
+    })
+
+    it('requires whitespace after the colon, as YAML does', () => {
+      expect(detectMode('/talk.md', fm('marp:true'))).toBe('doc')
     })
 
     it('ignores keys that merely start with or contain "marp"', () => {
@@ -78,6 +82,10 @@ describe('detectMode', () => {
       expect(detectMode('/a.ipynb', fm('markdx: deck'))).toBe('deck')
     })
 
+    it('reads a quoted value whose comment contains quotes', () => {
+      expect(detectMode('/a.md', fm('markdx: "notebook" # a "lab"'))).toBe('notebook')
+    })
+
     it('is ignored when its value is not a mode', () => {
       expect(detectMode('/a.md', fm('markdx: slides', 'marp: true'))).toBe('deck')
       expect(detectMode('/a.md', fm('markdx: Notebook'))).toBe('doc')
@@ -105,6 +113,16 @@ describe('detectMode', () => {
     it('tolerates spaces around the key and colon', () => {
       expect(detectMode('/talk.md', fm('marp :   true  '))).toBe('deck')
     })
+  })
+})
+
+describe('detectMode on hostile input', () => {
+  it('stays fast on a front matter line full of spaces', () => {
+    const line = 'title: a' + ' '.repeat(80_000) + 'b'
+    const start = performance.now()
+    expect(detectMode('/a.md', fm(line, 'marp' + ' '.repeat(80_000) + ': true'))).toBe('deck')
+    // The old backtracking regexes took about 9 s on this input.
+    expect(performance.now() - start).toBeLessThan(200)
   })
 })
 
