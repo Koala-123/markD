@@ -21,7 +21,11 @@ export const caretSlideIndex = (): number => {
   currentFallback = index
   return index
 }
-/** Scrolls to a slide and puts the caret at its first line of text. */
+/**
+ * Scrolls to a slide and puts the caret at the end of its first block. The
+ * end, not the start: at the start of a heading, typing lands in front of the
+ * `#` and turns the heading into a paragraph.
+ */
 export const moveCaretToSlide = (index: number): void => {
   const marker = index === 0 ? undefined : breaks()[index - 1]
   const editor = document.querySelector<HTMLElement>('.editor-component')
@@ -31,12 +35,14 @@ export const moveCaretToSlide = (index: number): void => {
     : editor.querySelector<HTMLElement>('.mu-paragraph, .mu-atx-heading, .mu-setext-heading')
   const content = first?.querySelector<HTMLElement>('.mu-paragraph-content') ?? first
   ;(marker ?? editor.firstElementChild)?.scrollIntoView?.({ block: 'start' })
-  const text = content && document.createTreeWalker(content, NodeFilter.SHOW_TEXT).nextNode()
+  const walker = content && document.createTreeWalker(content, NodeFilter.SHOW_TEXT)
+  let text: Node | null = null
+  while (walker?.nextNode()) text = walker.currentNode
   const selection = window.getSelection()
   if (!text || !selection) return
   editor.focus()
   const range = document.createRange()
-  range.setStart(text, 0)
+  range.setStart(text, text.textContent?.length ?? 0)
   range.collapse(true)
   selection.removeAllRanges()
   selection.addRange(range)

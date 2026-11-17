@@ -10,7 +10,7 @@ export const isMode = (value: unknown): value is Mode => MODES.includes(value as
 
 // YAML front matter: `---` on the very first line, closed by `---` or `...`.
 // A BOM before it is tolerated because editors on Windows still write one.
-const FRONT_MATTER = /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
+export const FRONT_MATTER = /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/
 
 /**
  * Reads one top-level scalar from front matter text, with no regex that can
@@ -22,7 +22,7 @@ const FRONT_MATTER = /^\uFEFF?---[ \t]*\r?\n(?:([\s\S]*?)\r?\n)?(?:---|\.\.\.)[ 
  * the first duplicate key wins. Replace with a real parser when the Phase 2
  * directive inspector has to edit front matter rather than read two keys.
  */
-const topLevelScalar = (frontMatter: string, key: string): { value: string; quoted: boolean } | undefined => {
+export const topLevelScalar = (frontMatter: string, key: string): { value: string; quoted: boolean } | undefined => {
   for (const line of frontMatter.split(/\r?\n/)) {
     // YAML needs whitespace (or the end of the line) after the colon.
     const head = /^([A-Za-z_][\w-]*)[ \t]*:(?=[ \t]|$)/.exec(line)

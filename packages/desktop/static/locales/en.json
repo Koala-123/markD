@@ -1000,6 +1000,15 @@
         "doc": "Mode: Doc",
         "deck": "Mode: Deck",
         "notebook": "Mode: Notebook"
+      },
+      "deck": {
+        "present": "Deck: Open presenter view",
+        "export": {
+          "html": "Deck: Export as HTML",
+          "pdf": "Deck: Export as PDF",
+          "png": "Deck: Export slides as PNG images",
+          "pptx": "Deck: Export as PowerPoint (slides as pictures)"
+        }
       }
     },
     "deck": {
@@ -1008,7 +1017,25 @@
       "slideOf": "Slide {current} of {total}",
       "goTo": "Go to slide {number}: {title}",
       "untitled": "untitled",
-      "notes": "Notes:"
+      "notes": "Notes:",
+      "inspector": {
+        "label": "Deck settings",
+        "theme": "Theme",
+        "size": "Size",
+        "paginate": "Page numbers",
+        "changed": "{name} set to {value}",
+        "unset": "default"
+      },
+      "present": "Present",
+      "exportLabel": "Export",
+      "exportHtml": "HTML",
+      "exportPdf": "PDF",
+      "exportPng": "PNG",
+      "exportPptx": "PPTX",
+      "exported": "Exported to {path}",
+      "exportFailed": "Export failed: {message}",
+      "exportCanceled": "Export canceled",
+      "actions": "Present and export"
     }
   }
 }

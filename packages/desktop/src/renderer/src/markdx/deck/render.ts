@@ -25,6 +25,14 @@ const createMarp = (): Marp => {
   return marp
 }
 
+// Marp's gaia and uncover themes @import their web fonts from a CDN. markDX is
+// local-first: a deck must not make a network request just by being opened, and
+// a pending blocked import made hidden-window capture fail. Those themes fall
+// back to the system fonts in their font stacks.
+// ponytail: bundle the OFL fonts (Lato, Roboto Mono) to match Marp CLI exactly.
+export const stripRemoteImports = (css: string): string =>
+  css.replace(/@import\s+(?:url\(\s*)?["']?https?:[^;]*;/g, '')
+
 let sharedMarp: Marp | undefined
 
 export const DECK_THEMES = ['default', 'gaia', 'uncover', 'paper', 'ink'] as const
@@ -38,7 +46,7 @@ export const renderDeck = (markdown: string): RenderedDeck => {
   const slideStartLines = tokens
     .filter((token) => token.type === 'marpit_slide_open')
     .map((token) => token.map?.[0] ?? 0)
-  return { slides: html, css, notes: comments, slideStartLines }
+  return { slides: html, css: stripRemoteImports(css), notes: comments, slideStartLines }
 }
 
 /** Index of the slide that contains the zero-based editor line. */

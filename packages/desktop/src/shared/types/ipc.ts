@@ -32,6 +32,7 @@ import type {
 } from './files'
 import type { BufferedState as BufferedStateType } from './bufferedState'
 import type { MenuTemplate, MenuPopupPosition } from './menu'
+import type { DeckPayload, DeckExportKind, DeckExportResult } from './markdxDeck'
 
 // =================================================================
 // Invoke channels (renderer → main, returns Promise<T>)
@@ -48,6 +49,8 @@ export interface IpcInvokeChannels {
   'mt::fs::copy': { args: [src: string, dest: string]; ret: void }
   'mt::fs::empty-dir': { args: [path: string]; ret: void }
   'mt::fs::ensure-dir': { args: [path: string]; ret: void }
+  'mt::markdx-export-deck': { args: [kind: DeckExportKind, deck: DeckPayload]; ret: DeckExportResult }
+  'mt::markdx-open-presenter': { args: [deck: DeckPayload, startIndex: number]; ret: void }
   'mt::fs::is-directory': { args: [path: string]; ret: boolean }
   'mt::fs::is-executable': { args: [path: string]; ret: boolean }
   'mt::fs::is-file': { args: [path: string]; ret: boolean }

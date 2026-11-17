@@ -265,6 +265,12 @@ const resolveEditorFont = (family: string): string =>
 const resolveCodeFont = (family: string): string => `${family}, ${DEFAULT_CODE_FONT_FAMILY}`
 const selectionChange = ref<unknown>(null)
 const editor = ref<MuyaInstance>(null)
+
+// markDX: the deck's directive inspector rewrites front matter through the
+// engine, so the change is one undo step like any other edit.
+const replaceMarkdownAsOneUndoStep = (markdown: unknown): void => {
+  if (typeof markdown === 'string') editor.value?.replaceContent(markdown)
+}
 const isShowClose = ref(false)
 const dialogTableVisible = ref(false)
 const imageViewerVisible = ref<boolean | null>(null)
@@ -1870,6 +1876,7 @@ onMounted(() => {
   bus.on('replaceValue', handReplace)
   bus.on('find-action', handleFindAction)
   bus.on('insert-image', insertImage)
+  bus.on('markdx:replace-markdown', replaceMarkdownAsOneUndoStep)
   bus.on('image-uploaded', handleUploadedImage)
   bus.on('file-changed', handleFileChange)
   bus.on('flush-active-editor', flushActiveEditor)
@@ -2024,6 +2031,7 @@ onBeforeUnmount(() => {
   bus.off('replaceValue', handReplace)
   bus.off('find-action', handleFindAction)
   bus.off('insert-image', insertImage)
+  bus.off('markdx:replace-markdown', replaceMarkdownAsOneUndoStep)
   bus.off('image-uploaded', handleUploadedImage)
   bus.off('file-changed', handleFileChange)
   bus.off('flush-active-editor', flushActiveEditor)

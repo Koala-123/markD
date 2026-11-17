@@ -10,7 +10,7 @@ protected) and `BASELINE.md` (what "green" means here).
 | Step 0: audit | **done** | `markdx/step-0-audit` |
 | Phase 0: rebrand | **done**, pushed | `brand/markdx` |
 | Phase 1: modes shell | **done**, pushed | `markdx/phase-1-modes` |
-| Phase 2: Marp decks | not started | `markdx/phase-2-marp` |
+| Phase 2: Marp decks | **done except the items in "Phase 2 not finished"**, pushed | `markdx/phase-2-marp` |
 | Phase 3: notebooks | not started, **blocked on Q1** | `markdx/phase-3-notebooks` |
 | Phase 4: Zotero | not started, **blocked on Q1** | `markdx/phase-4-zotero` |
 | Phase 5: brand, UI, marketing | not started | `markdx/phase-5-brand` |
@@ -78,35 +78,80 @@ comments and website lines about MarkText's history, each marked
 - Detection reads front matter line by line, not as YAML: first duplicate key
   wins, multi-line quoted values can be misread.
 
+## Phase 2 (Marp decks): what exists
+
+"WYSIWYG slide deck" (owner, 2026-11-17) is met this way: in Deck mode the Muya
+editor stays on the left and edits the slides' Markdown as before; on the right
+the exact slides, drawn by marp-core, update as you type. The caret picks the
+slide, a thumbnail moves the caret, and each `---` is a numbered slide boundary
+in the editor. **Not built: typing directly on the drawn slide.** That needs a
+mapping from slide DOM back to Markdown offsets and was judged a much larger
+design than the owner's brief priced; say if you want it.
+
+- Engine `markdx/deck/render.ts`: marp-core 4.4.0 pinned, raw HTML escaped, no
+  script, remote `@import`s stripped (gaia and uncover import web fonts; markDX
+  makes no request just from opening a deck).
+- Preview `components/deckPane`: current slide, filmstrip, notes, each slide in an
+  `<iframe sandbox="">` (no flags: no script, opaque origin) with its own CSP.
+- Themes: default, gaia, uncover from marp-core; **Paper** and **Ink** are
+  original markDX themes (`markdx/deck/themes.ts`, system fonts only).
+- Directive inspector: theme, size (16:9, 4:3), page numbers. Edits front matter
+  through `replaceContent`, so each change is one undo step (e2e checks undo).
+- Presenter window: current slide, next slide, notes, timer, keys, full screen.
+  Its only script has a CSP nonce; deck data is a JSON block.
+- Export (main process, `mt::markdx-export-deck`): HTML, PDF (one page per
+  slide, tagged), PNG per slide, PPTX (each slide a picture with the slide title
+  as alt text; the zip is written by hand, so no new dependency).
+- Commands: "Deck: Open presenter view" and four "Deck: Export ..." in the palette.
+- Accessibility (R1): region and list roles with names, buttons with names
+  ("Go to slide 2: Title"), `aria-current`, live regions for slide changes,
+  settings changes and export results, visible focus, forced-colors rules; the
+  presenter has a timer role, live status and labelled regions. e2e queries by
+  role and name.
+
+### Measured (this machine, macOS, Electron 42; one run each, not a benchmark suite)
+
+- Engine alone, 40 slides, warm: about 6 to 16 ms (unit test asserts under 150 ms).
+- Keystroke to updated slide on a 40-slide deck, in the real app: 116 ms
+  (`markdx-deck-timing.spec.ts`, includes the 60 ms debounce). Target was 150 ms.
+- Visual diff against Marp CLI (opt-in e2e, `MARKDX_MARP_CLI=$(which marp)`),
+  share of pixels differing by more than 32/255 in any channel, 3 slides per theme:
+
+  | Theme | Slide 1 | Slide 2 | Slide 3 |
+  |---|---|---|---|
+  | default | 0.346% | 0.120% | 0.298% |
+  | gaia | 2.021% | 1.179% | 0.194% |
+  | uncover | 0.421% | 0.105% | 0.523% |
+  | paper | 0.322% | 0.088% | 0.173% |
+  | ink | 1.224% | 0.547% | 0.290% |
+
+  The test allows 2% (8% for gaia and uncover, whose web fonts the CLI downloads
+  and markDX does not). gaia's 2.02% on slide 1 is that font difference, not a
+  rendering bug, but it is an inference: it was not re-measured with the font
+  bundled. ink's 1.2% was not investigated.
+
+### Phase 2 not finished
+
+- **User themes from a folder** (brief item): not built.
+- **Typing directly on the slide** (see above).
+- **Audience window** kept in step with the presenter: not built; the presenter's
+  slide area can be taken full screen with F.
+- **Bundled fonts** for gaia and uncover (Lato, Roboto Mono, OFL): not done.
+- Exported PPTX was opened with python-pptx and unzip, **not with PowerPoint,
+  Keynote or LibreOffice**. Slides are pictures; text is not editable there.
+- HTML export is a scrolling page, no slide-by-slide keyboard navigation.
+- Relative image paths in the preview (`<base href="file://...">` in a sandboxed
+  frame) are built but **not tested**.
+- Only macOS was run. Windows and Linux paths (hidden windows, file URLs with
+  drive letters) are untested.
+- The presenter was not tried on a second display. English strings only for the
+  new text (other locales fall back to English).
+- Muya's own selection and `.mu-thematic-break` structure are relied on for the
+  caret and slide boundaries; a Muya change to that class name breaks both.
+
 ## Next
 
-Phase 2 (Marp decks), on `markdx/phase-2-marp` cut from `markdx/phase-1-modes`.
-Built as slices that each work on their own, in this order:
-
-1. **Engine.** `@marp-team/marp-core` 4.4.0 (MIT) behind one function:
-   Markdown in, per-slide HTML, CSS and speaker notes out, raw HTML off. Measured
-   with the copy inside the installed Marp CLI: `render(md, { htmlAsArray: true })`
-   returns `{ html[], css, comments[][] }`, and a 40-slide deck renders in about
-   16 ms warm, so the 150 ms target leaves room for the DOM update.
-2. **Preview.** One sandboxed iframe (scripts allowed, opaque origin, no
-   same-origin) holding the filmstrip and the slide canvas, fed by `postMessage`
-   and patched slide by slide. Open questions to settle with a single probe run:
-   whether a sandboxed `srcdoc` frame may load the frame script and local images
-   when the renderer is served from `file://`, and how the renderer's inherited
-   CSP (`script-src 'self'`) treats it.
-3. **Slide boundaries in the editor.** CSS only, keyed on `body[data-markdx-mode]`
-   plus a flag for `marp: true`; no Muya change.
-4. **Themes.** default, gaia, uncover from marp-core; "Paper" and "Ink" as new CSS
-   files; user themes from a folder.
-5. **Directive inspector.** Edits front matter, so it is the one place in this
-   phase that changes text, and it must do so through the editor so undo works.
-6. **Presenter window.** New window, typed IPC, current and next slide, notes,
-   timer.
-7. **Export.** HTML, PDF (`printToPDF` at the deck size), PNG per slide, PPTX as
-   images. PPTX is a zip of PNGs and fixed XML: written by hand with stored
-   (uncompressed) entries, so no new dependency.
-8. **Checks.** Visual diff against Marp CLI for the built-in themes (opt-in: it
-   needs the CLI and a browser), and a timing test for the 40-slide deck.
+Phase 3 and 4 wait on Q1. Phase 5 (brand, UI, marketing) does not.
 
 ## Decisions
 
@@ -129,6 +174,10 @@ Built as slices that each work on their own, in this order:
 | D15 | Migrated preferences are checked key by key against a scratch electron-store that uses the real schema; rejected keys are dropped. | Upstream's newer schema allows values this build rejects, and one rejected value makes electron-store throw at startup. Using the real loader as the judge needs no new dependency. |
 | D16 | The migration makes exactly one attempt (the marker is written before copying) and copies symlinks as real files. | A retry would run against a profile the app has since filled with defaults. A recreated symlink would leave both apps writing one file. |
 | D17 | `deb.packageName` and `rpm.packageName` are set to `markdx` in `electron-builder.yml`. | fpm names packages after `package.json` `name`, which stays `marktext`; a markDX package would otherwise replace an installed MarkText. |
+| D18 | Deck frames are `<iframe sandbox="">` with no flags and a meta CSP; no script and no `postMessage`. | The slide is only markup, so nothing in a document can run. The cost: thumbnails are buttons laid over frames, and updates replace `srcdoc`. |
+| D19 | Directive edits go through `muya.replaceContent` via a `markdx:replace-markdown` bus event (8 lines added to `editor.vue`). | The only existing path that records one undo step for a text change. |
+| D20 | One hidden window serves a whole export. | A window per slide made capture fail with `UnknownVizError` after a few exports in one session (seen in testing). |
+| D21 | PNG-decoding for the visual diff happens in the page (canvas), not with `nativeImage`. | `nativeImage` decoding took the app down on one slide. |
 
 ## Open questions for the owner
 

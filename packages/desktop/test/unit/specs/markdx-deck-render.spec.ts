@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DECK_THEMES, renderDeck, slideIndexAtLine } from '@/markdx/deck/render'
+import { DECK_THEMES, renderDeck, slideIndexAtLine, stripRemoteImports } from '@/markdx/deck/render'
 
 const deck = (...slides: string[]): string => ['---', 'marp: true', '---', '', slides.join('\n\n---\n\n'), ''].join('\n')
 
@@ -47,6 +47,19 @@ describe('renderDeck', () => {
     const elapsed = performance.now() - start
     expect(rendered.slides).toHaveLength(40)
     expect(elapsed).toBeLessThan(150)
+  })
+})
+
+describe('remote imports', () => {
+  it('are removed, and local ones kept', () => {
+    expect(stripRemoteImports('@import "https://fonts.example/css?x=1";a{b:c}')).toBe('a{b:c}')
+    expect(stripRemoteImports("@import url('http://x/y.css') screen;a{}")).toBe('a{}')
+    expect(stripRemoteImports('@import "local.css";a{}')).toBe('@import "local.css";a{}')
+  })
+
+  it.each(DECK_THEMES)('leave no network reference in the %s theme output', (theme) => {
+    const { css } = renderDeck(`---\nmarp: true\ntheme: ${theme}\n---\n# Hi\n`)
+    expect(css).not.toMatch(/@import\s+(?:url\()?["']?https?:/)
   })
 })
 
